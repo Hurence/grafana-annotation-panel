@@ -1,0 +1,33 @@
+{
+  "type": "panel",
+  "name": "Annotation List",
+  "id": "hurence-grafana-annotation-panel",
+
+  "info": {
+    "description": "List of Annotations",
+    "author": {
+      "name": "Hurence"
+    },
+    "keywords": ["annotations", "list"],
+    "logos": {
+      "small": "img/annolist-icon.svg",
+      "large": "img/annolist-icon.svg"
+    },
+    "links": [
+      {"name": "Project site", "url": "https://github.com/Hurence/grafana-annotation-panel"},
+      {
+        "name": "MIT License",
+        "url": "https://github.com/Hurence/grafana-annotation-panel/blob/master/LICENSE"
+      }
+    ],
+    "screenshots": [
+      {"name": "Options", "path": "img/screenshot-options.png"},
+      {"name": "Link", "path": "img/screenshot-link.png"}
+    ],
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
+  },
+  "dependencies": {
+    "grafanaVersion": "5.2.x"
+  }
+}
