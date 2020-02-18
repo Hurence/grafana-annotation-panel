@@ -1,18 +1,16 @@
-///<reference path="../node_modules/grafana-sdk-mocks/app/headers/common.d.ts" />
-
 import _ from 'lodash';
-import {PanelCtrl} from 'app/plugins/sdk';
-import moment from 'moment';
-
 import './css/annolist.css';
+import { AnnotationsSrv } from 'grafana/app/features/annotations/annotations_srv';
+import { MetricsPanelCtrl } from 'grafana/app/plugins/sdk';
+// import moment from 'moment';
 
-class AnnoListCtrl extends PanelCtrl {
+//private annotationsSrv: AnnotationsSrv
+class AnnoListCtrl extends MetricsPanelCtrl {
   static templateUrl = 'partials/module.html';
   static scrollable = true;
 
   found: any[] = [];
-  timeInfo?: string; // TODO shoudl be defined in Types
-
+  // timeInfo: string;
   queryUserId?: number;
   queryUser?: string;
   queryTagValue?: string;
@@ -32,21 +30,14 @@ class AnnoListCtrl extends PanelCtrl {
   };
 
   /** @ngInject */
-  constructor(
-    $scope,
-    $injector,
-    private $rootScope,
-    private backendSrv,
-    private timeSrv,
-    private $location
-  ) {
+  constructor($scope: any, $injector: any, private annotationsSrv: AnnotationsSrv) {
     super($scope, $injector);
     _.defaults(this.panel, AnnoListCtrl.panelDefaults);
 
-    $scope.moment = moment;
+    // $scope.moment = moment;
 
-    this.events.on('refresh', this.onRefresh.bind(this));
-    this.events.on('init-edit-mode', this.onInitEditMode.bind(this));
+    // this.events.on('refresh', this.onRefresh.bind(this));
+    // this.events.on('init-edit-mode', this.onInitEditMode.bind(this));
   }
 
   onInitEditMode() {
@@ -100,85 +91,94 @@ class AnnoListCtrl extends PanelCtrl {
       }
       this.timeInfo += ' ' + this.queryTagValue;
     }
-
-    return this.backendSrv.get('/api/annotations', params).then(result => {
-      this.found = result;
+    if (this.datasource) {
+      return this.datasource.annotationQuery(params).then(result => {
+        this.found = result;
+      });
+    }
+    // return this.backendSrv.get('/api/annotations', params).then(result => {
+    //   this.found = result;
+    // });
+    return this.annotationsSrv.getAnnotations({
+      dashboard: this.dashboard,
+      panel: this.panel,
+      range: this.range,
     });
   }
 
-  _timeOffset(time: number, offset: string, subtract = false) {
-    let incr = 5;
-    let unit = 'm';
-    const parts = /^(\d+)(\w)/.exec(offset);
-    if (parts && parts.length === 3) {
-      incr = parseInt(parts[1], 10);
-      unit = parts[2];
-    }
+  // _timeOffset(time: number, offset: string, subtract = false) {
+  //   let incr = 5;
+  //   let unit = 'm';
+  //   const parts = /^(\d+)(\w)/.exec(offset);
+  //   if (parts && parts.length === 3) {
+  //     incr = parseInt(parts[1], 10);
+  //     unit = parts[2];
+  //   }
 
-    const t = moment.utc(time);
-    if (subtract) {
-      incr *= -1;
-    }
-    t.add(incr, unit);
-    return t;
-  }
+  //   const t = moment.utc(time);
+  //   if (subtract) {
+  //     incr *= -1;
+  //   }
+  //   t.add(incr, unit);
+  //   return t;
+  // }
 
   selectAnno(anno: any, evt?: any) {
-    if (evt) {
-      evt.stopPropagation();
-      evt.preventDefault();
-    }
-    const range = {
-      from: this._timeOffset(anno.time, this.panel.navigateBefore, true),
-      to: this._timeOffset(anno.time, this.panel.navigateAfter, false),
-    };
+    // if (evt) {
+    //   evt.stopPropagation();
+    //   evt.preventDefault();
+    // }
+    // const range = {
+    //   from: this._timeOffset(anno.time, this.panel.navigateBefore, true),
+    //   to: this._timeOffset(anno.time, this.panel.navigateAfter, false),
+    // };
 
-    // Link to the panel on the same dashboard
-    if (this.dashboard.id === anno.dasboardId) {
-      this.timeSrv.setTime(range);
-      if (this.panel.navigateToPanel) {
-        this.$location.search('panelId', anno.panelId);
-        this.$location.search('fullscreen', true);
-      }
-      return;
-    }
+    // // Link to the panel on the same dashboard
+    // if (this.dashboard.id === anno.dasboardId) {
+    //   this.timeSrv.setTime(range);
+    //   if (this.panel.navigateToPanel) {
+    //     this.$location.search('panelId', anno.panelId);
+    //     this.$location.search('fullscreen', true);
+    //   }
+    //   return;
+    // }
 
-    if (anno.dashboardId === 0) {
-      this.$rootScope.appEvent('alert-warning', [
-        'Invalid Annotation Dashboard',
-        'Annotation on dashboard: 0 (new?)',
-      ]);
-      return;
-    }
+    // if (anno.dashboardId === 0) {
+    //   this.$rootScope.appEvent('alert-warning', [
+    //     'Invalid Annotation Dashboard',
+    //     'Annotation on dashboard: 0 (new?)',
+    //   ]);
+    //   return;
+    // }
 
-    this.backendSrv.get('/api/search', {dashboardIds: anno.dashboardId}).then(res => {
-      if (res && res.length === 1 && res[0].id === anno.dashboardId) {
-        const dash = res[0];
-        let path = dash.url;
-        if (!path) {
-          // before v5.
-          path = '/dashboard/' + dash.uri;
-        }
+    // this.backendSrv.get('/api/search', {dashboardIds: anno.dashboardId}).then(res => {
+    //   if (res && res.length === 1 && res[0].id === anno.dashboardId) {
+    //     const dash = res[0];
+    //     let path = dash.url;
+    //     if (!path) {
+    //       // before v5.
+    //       path = '/dashboard/' + dash.uri;
+    //     }
 
-        const params: any = {
-          from: range.from.valueOf().toString(),
-          to: range.to.valueOf().toString(),
-        };
-        if (this.panel.navigateToPanel) {
-          params.panelId = anno.panelId;
-          params.fullscreen = true;
-        }
-        const orgId = this.$location.search().orgId;
-        if (orgId) {
-          params.orgId = orgId;
-        }
-        console.log('SEARCH', path, params);
-        this.$location.path(path).search(params);
-      } else {
-        console.log('Unable to find dashboard...', anno);
-        this.$rootScope.appEvent('alert-warning', ['Unknown Dashboard: ' + anno.dashboardId]);
-      }
-    });
+    //     const params: any = {
+    //       from: range.from.valueOf().toString(),
+    //       to: range.to.valueOf().toString(),
+    //     };
+    //     if (this.panel.navigateToPanel) {
+    //       params.panelId = anno.panelId;
+    //       params.fullscreen = true;
+    //     }
+    //     const orgId = this.$location.search().orgId;
+    //     if (orgId) {
+    //       params.orgId = orgId;
+    //     }
+    //     console.log('SEARCH', path, params);
+    //     this.$location.path(path).search(params);
+    //   } else {
+    //     console.log('Unable to find dashboard...', anno);
+    //     this.$rootScope.appEvent('alert-warning', ['Unknown Dashboard: ' + anno.dashboardId]);
+    //   }
+    // });
   }
 
   queryAnnotationUser(anno: any, evt?: any) {

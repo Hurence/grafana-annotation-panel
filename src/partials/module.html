@@ -1,11 +1,16 @@
 <div class="dashlist">
+  <span class="dashlist-title"  ng-if="ctrl.datasource">
+    datasource selected is {{ctrl.datasource}}
+  </span>
   <div class="dashlist-section" ng-if="ctrl.found">
+    annotations found are {{ctrl.found}}
+
     <!--
     <h6 class="dashlist-section-header" ng-if="ctrl.panel.headings">
       {{group.header}}
     </h6>
   -->
-    <div class="dashlist-item" ng-repeat="anno in ctrl.found">
+    <!-- <div class="dashlist-item" ng-repeat="anno in ctrl.found">
       <a class="dashlist-link dashlist-link-{{anno.type}}" 
         ng-click="ctrl.selectAnno(anno, $event);" 
         href="#">
@@ -13,7 +18,6 @@
           {{anno.text}}
         </span>
 
-        <!-- Right Aligned -->
         <span class="pluginlist-message">
           <span ng-if="ctrl.panel.showUser && anno.login" class="graph-annotation">
             <span  
@@ -34,7 +38,6 @@
           </span>
         </span>
 
-        <!-- small grey text -->
         <span class="pluginlist-version">
           <span ng-if="ctrl.panel.showTime">
             {{ ctrl.dashboard.formatDate(anno.time) }}
@@ -45,7 +48,7 @@
           </span>
         </span>
       </a>
-    </div>
+    </div> -->
   </div>
   
   <!-- NOT Found message -->
