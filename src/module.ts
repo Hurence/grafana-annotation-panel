@@ -2,6 +2,7 @@ import _ from 'lodash';
 import './css/annolist.css';
 import { AnnotationsSrv } from 'grafana/app/features/annotations/annotations_srv';
 import { MetricsPanelCtrl } from 'grafana/app/plugins/sdk';
+import defaultsDeep from 'lodash/defaultsDeep';
 // import moment from 'moment';
 
 //private annotationsSrv: AnnotationsSrv
@@ -10,15 +11,13 @@ class AnnoListCtrl extends MetricsPanelCtrl {
   static scrollable = true;
 
   found: any[] = [];
-  // timeInfo: string;
-  queryUserId?: number;
-  queryUser?: string;
-  queryTagValue?: string;
 
-  static panelDefaults = {
+  panelDefaults = {
     limit: 10,
     tags: [],
     onlyFromThisDashboard: false,
+    matchAny: true,
+    queryType: "tags",
 
     showTags: true,
     showUser: true,
@@ -32,17 +31,23 @@ class AnnoListCtrl extends MetricsPanelCtrl {
   /** @ngInject */
   constructor($scope: any, $injector: any, private annotationsSrv: AnnotationsSrv) {
     super($scope, $injector);
-    _.defaults(this.panel, AnnoListCtrl.panelDefaults);
+    defaultsDeep(this.panel, this.panelDefaults);
+
+    // _.defaults(this.panel, AnnoListCtrl.panelDefaults);
 
     // $scope.moment = moment;
 
-    // this.events.on('refresh', this.onRefresh.bind(this));
-    // this.events.on('init-edit-mode', this.onInitEditMode.bind(this));
+    this.events.on('init-edit-mode', this.onInitEditMode.bind(this));
+    this.events.on('data-error', this.onDataError.bind(this));
+    this.events.on('refresh', this.onRefresh.bind(this));
+  }
+  onDataError(err: any) {
+    console.log('onDataError', err);
   }
 
   onInitEditMode() {
-    this.editorTabIndex = 1;
-    this.addEditorTab('Options', 'public/plugins/ryantxu-annolist-panel/partials/editor.html');
+    console.log("plugin id is", this.pluginId);
+    this.addEditorTab('Options', `public/plugins/${this.pluginId}/partials/editor.html`, 2);
   }
 
   onRefresh() {
@@ -50,7 +55,9 @@ class AnnoListCtrl extends MetricsPanelCtrl {
 
     promises.push(this.getAnnotationSearch());
 
-    return Promise.all(promises).then(this.renderingCompleted.bind(this));
+    return Promise.all(promises).then(
+      this.renderingCompleted.bind(this)
+    );
   }
 
   getAnnotationSearch(): Promise<any> {
@@ -58,148 +65,42 @@ class AnnoListCtrl extends MetricsPanelCtrl {
     // https://github.com/grafana/grafana/blob/master/public/app/core/services/backend_srv.ts
     // https://github.com/grafana/grafana/blob/master/public/app/features/annotations/annotations_srv.ts
 
+    const timeRange = this.timeSrv.timeRange()
     const params: any = {
       tags: this.panel.tags,
       limit: this.panel.limit,
-      type: 'annotation', // Skip the Annotations that are really alerts.  (Use the alerts panel!)
+      type: this.panel.queryType, // Skip the Annotations that are really alerts.  (Use the alerts panel!)
+      annotation: 'annotation',
+      range: {
+        from: timeRange.from,
+        to: timeRange.to
+      },
+      rangeRaw: timeRange.raw,
+      matchAny: this.panel.matchAny
     };
 
-    if (this.panel.onlyFromThisDashboard) {
-      params.dashboardId = this.dashboard.id;
-    }
-
-    let timeInfo = '';
-    if (this.panel.onlyInTimeRange) {
-      const range = this.timeSrv.timeRange();
-      params.from = range.from.valueOf();
-      params.to = range.to.valueOf();
-    } else {
-      timeInfo = 'All Time';
-    }
-    this.timeInfo = timeInfo;
-
-    if (this.queryUserId !== undefined) {
-      params.userId = this.queryUserId;
-      this.timeInfo += ' ' + this.queryUser;
-    }
-
-    if (this.queryTagValue) {
-      if (params.tags) {
-        params.tags.push(this.queryTagValue);
-      } else {
-        params.tags = [this.queryTagValue];
-      }
-      this.timeInfo += ' ' + this.queryTagValue;
-    }
+    console.log("datasource is", this.datasource);
+    console.log("annotationsSrv is", this.annotationsSrv);
     if (this.datasource) {
+      console.log("executing datasource.annotationQuery with params :", params);
       return this.datasource.annotationQuery(params).then(result => {
-        this.found = result;
+        console.log("found annotations :", result);
+        this.found = result.annotations;
       });
     }
     // return this.backendSrv.get('/api/annotations', params).then(result => {
     //   this.found = result;
     // });
+    console.log("executing annotationsSrv.getAnnotations with params :", {
+      dashboard: this.dashboard,
+      panel: this.panel,
+      range: this.range,
+    });
     return this.annotationsSrv.getAnnotations({
       dashboard: this.dashboard,
       panel: this.panel,
       range: this.range,
     });
-  }
-
-  // _timeOffset(time: number, offset: string, subtract = false) {
-  //   let incr = 5;
-  //   let unit = 'm';
-  //   const parts = /^(\d+)(\w)/.exec(offset);
-  //   if (parts && parts.length === 3) {
-  //     incr = parseInt(parts[1], 10);
-  //     unit = parts[2];
-  //   }
-
-  //   const t = moment.utc(time);
-  //   if (subtract) {
-  //     incr *= -1;
-  //   }
-  //   t.add(incr, unit);
-  //   return t;
-  // }
-
-  selectAnno(anno: any, evt?: any) {
-    // if (evt) {
-    //   evt.stopPropagation();
-    //   evt.preventDefault();
-    // }
-    // const range = {
-    //   from: this._timeOffset(anno.time, this.panel.navigateBefore, true),
-    //   to: this._timeOffset(anno.time, this.panel.navigateAfter, false),
-    // };
-
-    // // Link to the panel on the same dashboard
-    // if (this.dashboard.id === anno.dasboardId) {
-    //   this.timeSrv.setTime(range);
-    //   if (this.panel.navigateToPanel) {
-    //     this.$location.search('panelId', anno.panelId);
-    //     this.$location.search('fullscreen', true);
-    //   }
-    //   return;
-    // }
-
-    // if (anno.dashboardId === 0) {
-    //   this.$rootScope.appEvent('alert-warning', [
-    //     'Invalid Annotation Dashboard',
-    //     'Annotation on dashboard: 0 (new?)',
-    //   ]);
-    //   return;
-    // }
-
-    // this.backendSrv.get('/api/search', {dashboardIds: anno.dashboardId}).then(res => {
-    //   if (res && res.length === 1 && res[0].id === anno.dashboardId) {
-    //     const dash = res[0];
-    //     let path = dash.url;
-    //     if (!path) {
-    //       // before v5.
-    //       path = '/dashboard/' + dash.uri;
-    //     }
-
-    //     const params: any = {
-    //       from: range.from.valueOf().toString(),
-    //       to: range.to.valueOf().toString(),
-    //     };
-    //     if (this.panel.navigateToPanel) {
-    //       params.panelId = anno.panelId;
-    //       params.fullscreen = true;
-    //     }
-    //     const orgId = this.$location.search().orgId;
-    //     if (orgId) {
-    //       params.orgId = orgId;
-    //     }
-    //     console.log('SEARCH', path, params);
-    //     this.$location.path(path).search(params);
-    //   } else {
-    //     console.log('Unable to find dashboard...', anno);
-    //     this.$rootScope.appEvent('alert-warning', ['Unknown Dashboard: ' + anno.dashboardId]);
-    //   }
-    // });
-  }
-
-  queryAnnotationUser(anno: any, evt?: any) {
-    if (evt) {
-      evt.stopPropagation();
-      evt.preventDefault();
-    }
-    this.queryUserId = anno.userId;
-    this.queryUser = anno.login;
-    console.log('Query User', anno, this);
-    this.refresh();
-  }
-
-  queryAnnotationTag(anno: any, tag: string, evt?: any) {
-    if (evt) {
-      evt.stopPropagation();
-      evt.preventDefault();
-    }
-    this.queryTagValue = tag;
-    console.log('Query Tag', tag, anno, this);
-    this.refresh();
   }
 }
 

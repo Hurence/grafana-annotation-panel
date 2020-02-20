@@ -1,18 +1,11 @@
 <div class="dashlist">
-  <span class="dashlist-title"  ng-if="ctrl.datasource">
-    datasource selected is {{ctrl.datasource}}
-  </span>
   <div class="dashlist-section" ng-if="ctrl.found">
-    annotations found are {{ctrl.found}}
-
-    <!--
     <h6 class="dashlist-section-header" ng-if="ctrl.panel.headings">
       {{group.header}}
     </h6>
-  -->
-    <!-- <div class="dashlist-item" ng-repeat="anno in ctrl.found">
-      <a class="dashlist-link dashlist-link-{{anno.type}}" 
-        ng-click="ctrl.selectAnno(anno, $event);" 
+
+    <div class="dashlist-item" ng-repeat="anno in ctrl.found">
+      <a class="dashlist-link dashlist-link-{{anno.type}}"       
         href="#">
         <span class="dashlist-title">
           {{anno.text}}
@@ -21,16 +14,13 @@
         <span class="pluginlist-message">
           <span ng-if="ctrl.panel.showUser && anno.login" class="graph-annotation">
             <span  
-              ng-click="ctrl.queryAnnotationUser(anno, $event)" 
-              class="graph-annotation__user" 
-              bs-tooltip="'Created by:<br/> {{anno.email}}'">
+              class="graph-annotation__user">
               <img ng-src="{{anno.avatarUrl}}" />
             </span>
           </span>
 
           <span
             ng-if="ctrl.panel.showTags" 
-            ng-click="ctrl.queryAnnotationTag(anno, tag, $event)" 
             ng-repeat="tag in anno.tags" 
             tag-color-from-name="tag" 
             class="label label-tag">
@@ -48,7 +38,7 @@
           </span>
         </span>
       </a>
-    </div> -->
+    </div>
   </div>
   
   <!-- NOT Found message -->

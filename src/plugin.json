@@ -2,7 +2,6 @@
   "type": "panel",
   "name": "Annotation List",
   "id": "hurence-grafana-annotation-panel",
-
   "info": {
     "description": "List of Annotations",
     "author": {
