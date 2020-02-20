@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import './css/annolist.css';
-import { AnnotationsSrv } from 'grafana/app/features/annotations/annotations_srv';
+//import { AnnotationsSrv } from 'grafana/app/features/annotations/annotations_srv';
 import { MetricsPanelCtrl } from 'grafana/app/plugins/sdk';
 import defaultsDeep from 'lodash/defaultsDeep';
 // import moment from 'moment';
@@ -11,6 +11,7 @@ class AnnoListCtrl extends MetricsPanelCtrl {
   static scrollable = true;
 
   found: any[] = [];
+  resfreshCount = 0;
 
   panelDefaults = {
     limit: 10,
@@ -29,7 +30,7 @@ class AnnoListCtrl extends MetricsPanelCtrl {
   };
 
   /** @ngInject */
-  constructor($scope: any, $injector: any, private annotationsSrv: AnnotationsSrv) {
+  constructor($scope: any, $injector: any) {
     super($scope, $injector);
     defaultsDeep(this.panel, this.panelDefaults);
 
@@ -60,48 +61,56 @@ class AnnoListCtrl extends MetricsPanelCtrl {
     );
   }
 
-  getAnnotationSearch(): Promise<any> {
+  getAnnotationSearch(): Promise<any> {    
+    console.debug("AnnoListCtrl is", this);
+    const datasource = this.datasource;
+    console.debug("datasource is", datasource);  
+    if (!this.isCurrentDatasourceSupported(datasource)) {
+      return new Promise<any>(() => {});    
+    }
     // http://docs.grafana.org/http_api/annotations/
     // https://github.com/grafana/grafana/blob/master/public/app/core/services/backend_srv.ts
     // https://github.com/grafana/grafana/blob/master/public/app/features/annotations/annotations_srv.ts
-
-    const timeRange = this.timeSrv.timeRange()
-    const params: any = {
-      tags: this.panel.tags,
-      limit: this.panel.limit,
-      type: this.panel.queryType, // Skip the Annotations that are really alerts.  (Use the alerts panel!)
-      annotation: 'annotation',
-      range: {
-        from: timeRange.from,
-        to: timeRange.to
-      },
-      rangeRaw: timeRange.raw,
-      matchAny: this.panel.matchAny
-    };
-
-    console.log("datasource is", this.datasource);
-    console.log("annotationsSrv is", this.annotationsSrv);
-    if (this.datasource) {
-      console.log("executing datasource.annotationQuery with params :", params);
+    if (datasource.meta.id === "grafana-hurence-historian-datasource") {
+      const timeRange = this.timeSrv.timeRange()
+      const params: any = {
+        tags: this.panel.tags,
+        limit: this.panel.limit,
+        type: this.panel.queryType, // Skip the Annotations that are really alerts.  (Use the alerts panel!)
+        annotation: 'annotation',
+        range: {
+          from: timeRange.from,
+          to: timeRange.to
+        },
+        rangeRaw: timeRange.raw,
+        matchAny: this.panel.matchAny
+      };
+  
+      console.debug("executing datasource.annotationQuery with params :", params);
       return this.datasource.annotationQuery(params).then(result => {
-        console.log("found annotations :", result);
+        console.trace("found annotations :", result);
         this.found = result.annotations;
       });
     }
-    // return this.backendSrv.get('/api/annotations', params).then(result => {
-    //   this.found = result;
-    // });
-    console.log("executing annotationsSrv.getAnnotations with params :", {
-      dashboard: this.dashboard,
-      panel: this.panel,
-      range: this.range,
-    });
-    return this.annotationsSrv.getAnnotations({
-      dashboard: this.dashboard,
-      panel: this.panel,
-      range: this.range,
-    });
+    if (datasource.meta.name === "-- Grafana --") {
+      //TODO builtin annotation datasource
+    }  
+    return new Promise<any>(() => {});    
+  }
+
+  isCurrentDatasourceSupported(datasource: any): boolean {
+    if (typeof datasource === 'undefined' || datasource === null) {
+      console.error("datasource is undefined or null !")
+      return false;
+    }
+    if (datasource.meta.id == "grafana-hurence-historian-datasource") {
+      return true;
+    }
+    console.error("datasource is not yet supported", datasource.meta.type, datasource.meta.id)
+    return false;
   }
 }
+
+
 
 export {AnnoListCtrl, AnnoListCtrl as PanelCtrl};

@@ -1,4 +1,9 @@
-<div>
+<div class="section gf-form-group" ng-if="!ctrl.isCurrentDatasourceSupported(ctrl.datasource)">
+  This datasource is not currently supported !
+  The only datasource type currently supported is "grafana-hurence-historian-datasource"
+</div>
+<div ng-if="ctrl.isCurrentDatasourceSupported(ctrl.datasource)">
+  <!-- isCurrentDatasourceSupported -->
   <div class="section gf-form-group">
     <h5 class="section-heading">Display</h5>
 
@@ -29,7 +34,6 @@
       label-class="width-9" 
       checked="ctrl.panel.showAnnoJSON" 
       on-change="ctrl.refresh()"></gf-form-switch>
-
   </div>
 
   <div class="section gf-form-group">
