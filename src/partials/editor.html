@@ -39,7 +39,20 @@
       checked="ctrl.panel.onlyInTimeRange" 
       on-change="ctrl.refresh()"></gf-form-switch>
 
-    <div class="gf-form">
+    <div class="gf-form-select-wrapper width-8">
+      <select class="gf-form-input" ng-model="ctrl.panel.queryType" ng-options="f.value as f.text for f in ctrl.queryTypes">
+      </select>
+    </div>
+      
+    <gf-form-switch 
+      class="gf-form" 
+      label="Match any tags" 
+      label-class="width-12" 
+      checked="ctrl.panel.matchAny" 
+      on-change="ctrl.refresh()"
+      ng-if="ctrl.panel.queryType === 'tags'"></gf-form-switch>
+
+    <div class="gf-form" ng-if="ctrl.panel.queryType === 'tags'">
       <span class="gf-form-label width-7">Tags</span>
       <bootstrap-tagsinput 
         ng-model="ctrl.panel.tags" 

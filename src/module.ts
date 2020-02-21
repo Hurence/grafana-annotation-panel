@@ -12,6 +12,11 @@ class AnnoListCtrl extends MetricsPanelCtrl {
 
   found: any[] = [];
   resfreshCount = 0;
+  
+  queryTypes = [
+    { text: 'All', value: 'all' },
+    { text: 'Tags', value: 'tags' }
+  ];
 
   panelDefaults = {
     limit: 10,
