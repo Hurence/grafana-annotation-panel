@@ -16,17 +16,11 @@ class AnnoListCtrl extends MetricsPanelCtrl {
   panelDefaults = {
     limit: 10,
     tags: [],
-    onlyFromThisDashboard: false,
     matchAny: true,
     queryType: "tags",
-
     showTags: true,
-    showUser: true,
     showTime: true,
-
-    navigateBefore: '10m',
-    navigateAfter: '10m',
-    navigateToPanel: true,
+    onlyInTimeRange: true,
   };
 
   /** @ngInject */
@@ -72,19 +66,24 @@ class AnnoListCtrl extends MetricsPanelCtrl {
     // https://github.com/grafana/grafana/blob/master/public/app/core/services/backend_srv.ts
     // https://github.com/grafana/grafana/blob/master/public/app/features/annotations/annotations_srv.ts
     if (datasource.meta.id === "grafana-hurence-historian-datasource") {
-      const timeRange = this.timeSrv.timeRange()
       const params: any = {
         tags: this.panel.tags,
         limit: this.panel.limit,
         type: this.panel.queryType, // Skip the Annotations that are really alerts.  (Use the alerts panel!)
         annotation: 'annotation',
-        range: {
+        matchAny: this.panel.matchAny
+      };    
+      const timeRange = this.timeSrv.timeRange();
+      if (this.panel.onlyInTimeRange) {
+        params.range = {
           from: timeRange.from,
           to: timeRange.to
-        },
-        rangeRaw: timeRange.raw,
-        matchAny: this.panel.matchAny
-      };
+        };
+        params.rangeRaw = timeRange.raw;
+      }
+
+      
+
   
       console.debug("executing datasource.annotationQuery with params :", params);
       return this.datasource.annotationQuery(params).then(result => {
