@@ -1,35 +1,15 @@
 # Annotations List Panel
 
-This panel shows annotations.
+This panel shows annotations. The only datasource currently supported type is 'grafana-hurence-historian-datasource'.
+
+## Purpose
+
+This panel allow you to see all annotations stored in the historian (datasource of type 'grafana-hurence-historian-datasource').
 
 ## Future Improvement
 
-* choose datasource
-* be able to select tags to show on graphs.
+* Please add issue at https://github.com/Hurence/grafana-annotation-panel if you want us to implement new features.
 
-# Building this plugin
-
-This plugin leverages the grafana-toolkit to simplify building and packaging a plugin.
-
-Install module dependencies:
-
-yarn
-
-Build plugin in production mode:
-
-yarn build
-
-Build plugin in development mode:
-
-yarn dev
-
-Build plugin in development mode, watching for changes:
-
-yarn dev --watch
-
-# INSTALL
-
-Then copy paste the dist directory in a folder in grafana plugin directory.
 
 
 
