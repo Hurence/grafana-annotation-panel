@@ -23,7 +23,7 @@
   },
   "dependencies": {
     "jquery": "^3.4.0",
-    "lodash": "^4.17.13",
+    "lodash": "^4.17.19",
     "moment": "^2.22.1"
   },
   "devDependencies": {
